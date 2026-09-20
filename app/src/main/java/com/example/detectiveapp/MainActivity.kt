@@ -4,44 +4,34 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.detectiveapp.ui.theme.DetectiveAppTheme
+import androidx.activity.viewModels
+import com.example.detectiveapp.model.AppDatabase
+import com.example.detectiveapp.model.CaseRepository
+import com.example.detectiveapp.view.CaseListScreen
+import com.example.detectiveapp.view.theme.DetectiveAppTheme
+import com.example.detectiveapp.viewmodel.CaseViewModel
+import com.example.detectiveapp.viewmodel.CaseViewModelFactory
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val database = AppDatabase.getDatabase(this)
+        val repository = CaseRepository(
+            caseDao = database.caseDao(),
+            findingDao = database.findingDao(),
+            evidenceDao = database.evidenceDao()
+        )
+        val viewModel: CaseViewModel by viewModels {
+            CaseViewModelFactory(repository)
+        }
+
         setContent {
             DetectiveAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                CaseListScreen(viewModel = viewModel)
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    DetectiveAppTheme {
-        Greeting("Android")
     }
 }
