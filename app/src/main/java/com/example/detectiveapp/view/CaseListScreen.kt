@@ -1,36 +1,16 @@
 package com.example.detectiveapp.view
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.detectiveapp.model.entity.CaseEntity
@@ -44,67 +24,98 @@ fun CaseListScreen(viewModel: CaseViewModel) {
 
     var showFormDialog by remember { mutableStateOf(false) }
     var caseToEdit by remember { mutableStateOf<CaseEntity?>(null) }
-    var showDetailDialog by remember { mutableStateOf(false) }
 
-    val statusFilters = listOf("Todos", "Abierto", "En Investigación", "Cerrado")
+    // Control de navegación elástica a pantalla completa dedicado
+    var showDetailScreen by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Casos de Investigación") }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = {
-                caseToEdit = null
+    val statusFilters = listOf("Todos", "Abierto", "En proceso", "Cerrado")
+
+    if (showDetailScreen && detailState.selectedCase != null) {
+        CaseDetailScreen(
+            detailState = detailState,
+            onBack = {
+                showDetailScreen = false
+                viewModel.selectCase(0) // Cambiado null por 0 para cumplir con el tipo Int
+            },
+
+            onEdit = { caseEntity ->
+                caseToEdit = caseEntity
+                showDetailScreen = false
                 showFormDialog = true
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "Nuevo Caso")
+            },
+            onDelete = { caseEntity ->
+                viewModel.deleteCase(caseEntity)
+                showDetailScreen = false
+            },
+            onChangeStatus = { caseEntity, newStatus ->
+                viewModel.updateCaseStatus(caseEntity, newStatus)
+            },
+            onAddFinding = { caseId, desc, date ->
+                viewModel.addFinding(caseId, desc, date)
+            },
+            onAddEvidence = { caseId, name, desc, uri, witnessNotes, audioPath ->
+                viewModel.addEvidence(caseId, name, description = desc, imageUri = uri, witnessNotes = witnessNotes, audioPath = audioPath)
             }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp)
-        ) {
-            OutlinedTextField(
-                value = listState.searchQuery,
-                onValueChange = { viewModel.onSearchQueryChange(it) },
-                label = { Text("Buscar caso por título o descripción") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                statusFilters.forEach { filter ->
-                    FilterChip(
-                        selected = listState.selectedStatusFilter == filter,
-                        onClick = { viewModel.onStatusFilterChange(filter) },
-                        label = { Text(filter) }
-                    )
+        )
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Casos de Investigación", fontWeight = FontWeight.Bold) }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(onClick = {
+                    caseToEdit = null
+                    showFormDialog = true
+                }) {
+                    Icon(Icons.Default.Add, contentDescription = "Nuevo Caso")
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxSize()
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp)
             ) {
-                items(listState.cases) { caseEntity ->
-                    CaseCard(
-                        caseEntity = caseEntity,
-                        onClick = {
-                            viewModel.selectCase(caseEntity.id)
-                            showDetailDialog = true
-                        }
-                    )
+                OutlinedTextField(
+                    value = listState.searchQuery,
+                    onValueChange = { viewModel.onSearchQueryChange(it) },
+                    label = { Text("Buscar caso por título o descripción") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(statusFilters) { filter ->
+                        FilterChip(
+                            selected = listState.selectedStatusFilter == filter,
+                            onClick = { viewModel.onStatusFilterChange(filter) },
+                            label = { Text(filter) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(listState.cases) { caseEntity ->
+                        CaseCard(
+                            caseEntity = caseEntity,
+                            onClick = {
+                                viewModel.selectCase(caseEntity.id)
+                                showDetailScreen = true
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -129,55 +140,27 @@ fun CaseListScreen(viewModel: CaseViewModel) {
             }
         )
     }
-
-    if (showDetailDialog && detailState.selectedCase != null) {
-        CaseDetailDialog(
-            detailState = detailState,
-            onDismiss = { showDetailDialog = false },
-            onEdit = { caseEntity ->
-                caseToEdit = caseEntity
-                showDetailDialog = false
-                showFormDialog = true
-            },
-            onDelete = { caseEntity ->
-                viewModel.deleteCase(caseEntity)
-            },
-            onChangeStatus = { caseEntity, newStatus ->
-                viewModel.updateCaseStatus(caseEntity, newStatus)
-            },
-            onAddFinding = { caseId, desc, date ->
-                viewModel.addFinding(caseId, desc, date)
-            },
-            onAddEvidence = { caseId, name, desc ->
-                viewModel.addEvidence(caseId, name, desc)
-            }
-        )
-    }
 }
-
 @Composable
 fun CaseCard(caseEntity: CaseEntity, onClick: () -> Unit) {
+    val statusColor = when (caseEntity.status) {
+        "Abierto" -> Color(0xFF2E7D32)
+        "En proceso" -> Color(0xFFFBC02D)
+        "Cerrado" -> Color(0xFFC62828)
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = statusColor.copy(alpha = 0.08f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = caseEntity.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = caseEntity.status,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold
-                )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(text = caseEntity.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(text = caseEntity.status, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = statusColor)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = "Fecha: ${caseEntity.date}", style = MaterialTheme.typography.bodySmall)
@@ -186,3 +169,4 @@ fun CaseCard(caseEntity: CaseEntity, onClick: () -> Unit) {
         }
     }
 }
+
