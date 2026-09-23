@@ -1,5 +1,6 @@
 package com.example.detectiveapp.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.detectiveapp.model.entity.CaseEntity
 import com.example.detectiveapp.viewmodel.CaseViewModel
 
@@ -61,14 +63,22 @@ fun CaseListScreen(viewModel: CaseViewModel) {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Casos de Investigación", fontWeight = FontWeight.Bold) }
+                    title = { Text("ARCHIVO DE CASOS", fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.primary
+                    )
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(onClick = {
-                    caseToEdit = null
-                    showFormDialog = true
-                }) {
+                FloatingActionButton(
+                    onClick = {
+                        caseToEdit = null
+                        showFormDialog = true
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
                     Icon(Icons.Default.Add, contentDescription = "Nuevo Caso")
                 }
             }
@@ -144,9 +154,9 @@ fun CaseListScreen(viewModel: CaseViewModel) {
 @Composable
 fun CaseCard(caseEntity: CaseEntity, onClick: () -> Unit) {
     val statusColor = when (caseEntity.status) {
-        "Abierto" -> Color(0xFF2E7D32)
-        "En proceso" -> Color(0xFFFBC02D)
-        "Cerrado" -> Color(0xFFC62828)
+        "Abierto" -> Color(0xFF3B82F6)      // Azul de investigación abierta
+        "En proceso" -> Color(0xFFFFB300)   // Ámbar / Dorado
+        "Cerrado" -> Color(0xFFB91C1C)      // Rojo sangre / Expediente Cerrado
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
@@ -154,19 +164,51 @@ fun CaseCard(caseEntity: CaseEntity, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = statusColor.copy(alpha = 0.08f))
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp), // Esquinas más rectas tipo folder vintage
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(text = caseEntity.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(text = caseEntity.status, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = statusColor)
+        Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
+            // Una barra lateral de color según el estado del caso, muy estilo expediente
+            Box(
+                modifier = Modifier
+                    .width(6.dp)
+                    .fillMaxHeight()
+                    .background(statusColor)
+            )
+            
+            Column(modifier = Modifier.padding(16.dp).weight(1f)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        text = caseEntity.title.uppercase(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "● ${caseEntity.status.uppercase()}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = statusColor
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "FECHA DEL SUCESO: ${caseEntity.date}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF94A3B8),
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = caseEntity.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Fecha: ${caseEntity.date}", style = MaterialTheme.typography.bodySmall)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = caseEntity.description, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
+
 

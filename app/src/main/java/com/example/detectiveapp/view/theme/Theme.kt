@@ -1,35 +1,35 @@
 package com.example.detectiveapp.view.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val DarkColorScheme = darkColorScheme(
-    primary = DetectiveNavyPrimary,
-    secondary = DetectiveGoldSecondary,
-    background = Color(0xFF0F172A),
-    surface = Color(0xFF1E293B)
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = DetectiveNavyPrimary,
-    secondary = DetectiveGoldSecondary,
-    background = DetectiveBackground,
-    surface = DetectiveSurface
+private val DetectiveNoirColorScheme = darkColorScheme(
+    primary = DetectiveGold,
+    onPrimary = DetectiveBlack,
+    primaryContainer = DetectiveGray,
+    onPrimaryContainer = DetectiveText,
+    secondary = DetectiveAmber,
+    onSecondary = DetectiveBlack,
+    background = DetectiveBlack,
+    onBackground = DetectiveText,
+    surface = DetectiveCharcoal,
+    onSurface = DetectiveText,
+    surfaceVariant = DetectiveGray,
+    onSurfaceVariant = Color(0xFF94A3B8),
+    error = DetectiveRed,
+    onError = Color.White
 )
 
 @Composable
 fun DetectiveAppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true, // Forzamos el modo Noir Detective por defecto para cumplir con la petición
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-
+    // Usamos el esquema de color Noir Detective para una experiencia inmersiva
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = DetectiveNoirColorScheme,
         typography = Typography,
         content = content
     )

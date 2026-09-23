@@ -10,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.detectiveapp.model.entity.CaseEntity
 import com.example.detectiveapp.model.entity.EvidenceEntity
+import com.example.detectiveapp.view.theme.*
 import com.example.detectiveapp.viewmodel.CaseDetailUiState
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -81,12 +83,16 @@ fun CaseDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = caseEntity.title, fontWeight = FontWeight.Bold) },
+                title = { Text(text = caseEntity.title.uppercase(), fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Volver atrás")
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Volver atrás", tint = MaterialTheme.colorScheme.primary)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.primary
+                )
             )
         }
     ) { innerPadding ->
@@ -94,33 +100,69 @@ fun CaseDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(text = "Detalles del Caso", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(text = "Fecha de inicio: ${caseEntity.date}")
-                        Text(text = "Estado actual: ${caseEntity.status}", fontWeight = FontWeight.SemiBold)
-                        Text(text = "Descripción: ${caseEntity.description}")
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(4.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(text = "DETALLES DEL EXPEDIENTE", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                        HorizontalDivider(color = Color(0xFF334155), thickness = 1.dp)
+                        Text(text = "FECHA DE INICIO: ${caseEntity.date}", fontWeight = FontWeight.Bold, color = Color(0xFF94A3B8))
+                        Text(text = "ESTADO: ${caseEntity.status.uppercase()}", fontWeight = FontWeight.ExtraBold, color = when(caseEntity.status) {
+                            "Abierto" -> Color(0xFF3B82F6)
+                            "En proceso" -> Color(0xFFFFB300)
+                            "Cerrado" -> Color(0xFFB91C1C)
+                            else -> MaterialTheme.colorScheme.onSurface
+                        })
+                        Text(text = "DESCRIPCIÓN:", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text(text = caseEntity.description, color = MaterialTheme.colorScheme.onSurface)
 
                         Spacer(modifier = Modifier.height(6.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = { onChangeStatus(caseEntity, "Abierto") }, modifier = Modifier.weight(1f)) { Text("Abrir") }
-                            Button(onClick = { onChangeStatus(caseEntity, "Cerrado") }, modifier = Modifier.weight(1f)) { Text("Cerrar") }
+                            Button(
+                                onClick = { onChangeStatus(caseEntity, "Abierto") },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(4.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155))
+                            ) { Text("ABRIR", fontWeight = FontWeight.Bold) }
+                            Button(
+                                onClick = { onChangeStatus(caseEntity, "Cerrado") },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(4.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = DetectiveRed)
+                            ) { Text("CERRAR", fontWeight = FontWeight.Bold) }
                         }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
-                            OutlinedButton(onClick = { onEdit(caseEntity) }, modifier = Modifier.weight(1f)) { Text("Editar Caso") }
-                            Button(onClick = { onDelete(caseEntity); onBack() }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red), modifier = Modifier.weight(1f)) { Text("Eliminar") }
-                        }
+                            OutlinedButton(
+                                onClick = { onEdit(caseEntity) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(4.dp)
+                            ) { Text("EDITAR EXPEDIENTE", fontWeight = FontWeight.Bold) }
+                            Button(
+                                onClick = { onDelete(caseEntity); onBack() },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = DetectiveRed),
+                                modifier = Modifier.weight(1f),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, DetectiveRed),
+                                shape = RoundedCornerShape(4.dp)
+                            ) { Text("ELIMINAR", fontWeight = FontWeight.Bold) }
                     }
                 }
             }
             item {
-                Text(text = "Testimonios de Testigos 👤", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Text(text = "REGISTRO DE TESTIMONIOS", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary, letterSpacing = 1.sp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(4.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(value = witnessTestimonyText, onValueChange = { witnessTestimonyText = it }, label = { Text("Declaración Escrita") }, modifier = Modifier.fillMaxWidth())
 
